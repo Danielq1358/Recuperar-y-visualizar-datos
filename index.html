@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Mascotas</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 32px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #eef6ff, #e0e7ff, #fdf2f8);
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            box-shadow: 0 18px 45px rgba(59, 130, 246, 0.12);
+            padding: 32px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            color: #1d4ed8;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e3a8a;
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-weight: bold;
+        }
+
+        .panel {
+            background: #f8fbff;
+            border: 1px solid #dbeafe;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #334155;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .button-row {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .pets-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .pet-card {
+            background: linear-gradient(180deg, #fff, #f8fafc);
+            border: 1px solid #dbeafe;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 10px 25px rgba(148, 163, 184, 0.12);
+        }
+
+        .pet-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .pet-meta {
+            color: #475569;
+            line-height: 1.7;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 28px;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 16px;
+            color: #475569;
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐾 CRUD de Mascotas</h1>
+            <span class="badge">Flask + MySQL</span>
+        </div>
+
+        <div class="panel">
+            <form method="POST" action="{{ url_for('crear_mascota') if not mascota_editar else url_for('editar_mascota', id=mascota_editar.id) }}">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="nombre">Nombre</label>
+                        <input id="nombre" type="text" name="nombre" value="{{ mascota_editar.nombre if mascota_editar else '' }}" placeholder="Ej. Firulais" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="tipo">Tipo</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="Perro" {% if mascota_editar and mascota_editar.tipo == 'Perro' %}selected{% endif %}>Perro</option>
+                            <option value="Gato" {% if mascota_editar and mascota_editar.tipo == 'Gato' %}selected{% endif %}>Gato</option>
+                            <option value="Conejo" {% if mascota_editar and mascota_editar.tipo == 'Conejo' %}selected{% endif %}>Conejo</option>
+                            <option value="Otro" {% if mascota_editar and mascota_editar.tipo == 'Otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="color">Color</label>
+                        <input id="color" type="text" name="color" value="{{ mascota_editar.color if mascota_editar else '' }}" placeholder="Ej. Café" required>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary" type="submit">
+                        {{ 'Guardar cambios' if mascota_editar else 'Agregar mascota' }}
+                    </button>
+                    {% if mascota_editar %}
+                        <a href="{{ url_for('index') }}">
+                            <button class="secondary" type="button">Cancelar</button>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <div>
+            <h2>Lista de mascotas</h2>
+
+            {% if mascotas %}
+                <div class="pets-list">
+                    {% for mascota in mascotas %}
+                        <div class="pet-card">
+                            <div class="pet-name">{{ mascota.nombre }}</div>
+                            <div class="pet-meta">
+                                <strong>Tipo:</strong> {{ mascota.tipo }}<br>
+                                <strong>Color:</strong> {{ mascota.color }}
+                            </div>
+
+                            <div class="card-actions">
+                                <a href="{{ url_for('editar_mascota', id=mascota.id) }}">
+                                    <button class="secondary" type="button">Editar</button>
+                                </a>
+                                <a href="{{ url_for('eliminar_mascota', id=mascota.id) }}">
+                                    <button class="danger" type="button">Eliminar</button>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    No hay mascotas registradas todavía.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
